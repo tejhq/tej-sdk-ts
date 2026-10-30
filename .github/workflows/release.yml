@@ -1,0 +1,41 @@
+name: release
+
+# Publishes to npm on a tag of the shape v*.*.*. Uses npm trusted publishing
+# (OIDC) so no token is stored in the repo. Configure once at:
+# https://www.npmjs.com/package/tejhq/access  ->  Trusted publisher
+#   owner: tejhq   repo: tej-sdk-ts   workflow: release.yml   environment: npm
+# The very first publish must be done by hand (npm login && npm publish),
+# trusted publishing can only be attached to a package that already exists.
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: npm
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+          cache: npm
+      - run: npm ci
+      - name: Check version matches tag
+        run: |
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          PKG_VERSION=$(node -p "require('./package.json').version")
+          SRC_VERSION=$(node -p "require('fs').readFileSync('src/version.ts','utf8').match(/\"(.+)\"/)[1]")
+          if [ "$TAG_VERSION" != "$PKG_VERSION" ] || [ "$TAG_VERSION" != "$SRC_VERSION" ]; then
+            echo "Tag $TAG_VERSION, package.json $PKG_VERSION, src/version.ts $SRC_VERSION" >&2
+            exit 1
+          fi
+      - run: npm run typecheck && npm test && npm run build
+      - run: npm install -g npm@latest
+      - run: npm publish --provenance --access public
