@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.0
+
+- `delivery(symbol, exchange?, { from?, to? })`: NSE delivery quantity and % per day since 2010. Free key.
+- `DeliveryRow` type.
+
 ## 0.1.0
 
 First release. Feature parity with tej-sdk-py 0.3.0.

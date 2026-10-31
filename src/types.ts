@@ -82,6 +82,13 @@ export interface AdjustedRow {
   adj_close: number;
 }
 
+export interface DeliveryRow {
+  date: string;
+  volume: number;
+  delivery_qty: number;
+  delivery_pct: number;
+}
+
 export interface SymbolInterval {
   isin: string;
   symbol: string;

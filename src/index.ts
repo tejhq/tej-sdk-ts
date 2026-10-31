@@ -15,6 +15,7 @@ export type {
   ActionType,
   AdjustedRow,
   DateRange,
+  DeliveryRow,
   Envelope,
   Exchange,
   KeyInfo,

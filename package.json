@@ -1,6 +1,6 @@
 {
   "name": "tejhq",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "TypeScript SDK for tej-api: open EOD market data for NSE and BSE.",
   "keywords": ["nse", "bse", "bhavcopy", "ohlcv", "market-data", "india", "stocks", "typescript"],
   "homepage": "https://tejhq.dev",

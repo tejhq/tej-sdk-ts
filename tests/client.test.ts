@@ -80,6 +80,12 @@ describe("free key endpoints", () => {
     expect(calls[0]?.url).toBe("https://api.tejhq.dev/v1/adjusted/nse/RELIANCE?from=2024-10-01");
   });
 
+  it("delivery defaults to nse", async () => {
+    const { c, calls } = client([{ body: { data: [] } }]);
+    await c.delivery("reliance", undefined, { from: "2026-10-01", to: "2026-10-30" });
+    expect(calls[0]?.url).toBe("https://api.tejhq.dev/v1/delivery/nse/RELIANCE?from=2026-10-01&to=2026-10-30");
+  });
+
   it("symbols by isin or symbol, rejects neither", async () => {
     const { c, calls } = client([{ body: { data: [] } }, { body: { data: [] } }]);
     await c.symbols("nse", { isin: " ine040a01034 " });

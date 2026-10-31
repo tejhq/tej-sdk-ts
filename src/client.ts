@@ -18,6 +18,7 @@ import { ValidationError } from "./errors.js";
 import type {
   Action,
   AdjustedRow,
+  DeliveryRow,
   DateRange,
   Envelope,
   Me,
@@ -139,6 +140,12 @@ export class Client {
   async adjusted(symbol: string, exchange: string, range: DateRange = {}): Promise<AdjustedRow[]> {
     const body = await this.get(`/v1/adjusted/${normalizeExchange(exchange)}/${normalizeSymbol(symbol)}`, rangeQuery(range));
     return envelopeData<AdjustedRow>(body);
+  }
+
+  /** Delivery quantity and % per day, NSE only, since 2010. Needs a free key. */
+  async delivery(symbol: string, exchange = "nse", range: DateRange = {}): Promise<DeliveryRow[]> {
+    const body = await this.get(`/v1/delivery/${normalizeExchange(exchange)}/${normalizeSymbol(symbol)}`, rangeQuery(range));
+    return envelopeData<DeliveryRow>(body);
   }
 
   /** Symbol history by `symbol` or `isin`. Needs a free key. */

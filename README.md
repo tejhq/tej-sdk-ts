@@ -69,6 +69,10 @@ const c = new Client({ apiKey: "tej_live_..." });
 const adj = await c.adjusted("RELIANCE", "nse", { from: "2024-10-01", to: "2024-11-30" });
 console.log(adj.at(-1)?.adj_close, adj.at(-1)?.adj_factor_cumulative);
 
+// Delivery quantity and % (NSE, since 2010)
+const del = await c.delivery("RELIANCE", "nse", { from: "2026-10-01" });
+console.log(del.at(-1)?.delivery_pct);
+
 // Symbol history by ISIN or symbol
 await c.symbols("nse", { isin: "INE040A01034" });
 await c.symbols("nse", { symbol: "HDFCBANK" });
@@ -119,6 +123,7 @@ console.log(meta?.date, meta?.total); // day actually used, matches before pagin
 | `c.snapshot(exchange, date)` | `GET /v1/snapshot/{exchange}?date=` | keyless | `SnapshotRow[]` |
 | `c.actions(symbol)` | `GET /v1/actions/{symbol}` | keyless | `Action[]` |
 | `c.adjusted(symbol, exchange, { from?, to? })` | `GET /v1/adjusted/{exchange}/{symbol}` | free key | `AdjustedRow[]` |
+| `c.delivery(symbol, exchange?, { from?, to? })` | `GET /v1/delivery/{exchange}/{symbol}` | free key | `DeliveryRow[]` |
 | `c.symbols(exchange, { symbol } \| { isin })` | `GET /v1/symbols/{exchange}` | free key | `SymbolInterval[]` |
 | `c.me()` | `GET /v1/me` | free key | `Me` |
 | `c.metrics(symbol, exchange, { from?, to? })` | `GET /v1/metrics/{exchange}/{symbol}` | pro | `MetricsRow[]` |
