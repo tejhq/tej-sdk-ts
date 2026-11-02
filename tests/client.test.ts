@@ -193,3 +193,40 @@ describe("screener", () => {
     expect(calls).toHaveLength(0);
   });
 });
+
+describe("F&O", () => {
+  it("foChain defaults and envelope meta", async () => {
+    const meta = { symbol: "NIFTY", date: "2026-10-30", expiry: "2026-11-03", count: 1, underlying: 23053.1 };
+    const { c, calls } = client([{ body: { data: [{ strike: 23000 }], meta } }, { body: { data: [], meta } }]);
+    expect((await c.foChain("nifty"))[0]?.strike).toBe(23000);
+    expect(calls[0]?.url).toBe("https://api.tejhq.dev/v1/fo/chain/NIFTY");
+    const env = await c.foChainEnvelope("NIFTY", { date: "2026-10-30", expiry: "2026-11-03" });
+    expect(env.meta?.underlying).toBe(23053.1);
+    expect(calls[1]?.url).toBe("https://api.tejhq.dev/v1/fo/chain/NIFTY?date=2026-10-30&expiry=2026-11-03");
+  });
+
+  it("foExpiries, foFutures, foContract urls", async () => {
+    const { c, calls } = client(Array.from({ length: 4 }, () => ({ body: { data: [] } })));
+    await c.foExpiries("NIFTY", "2026-10-30");
+    await c.foFutures("reliance", { from: "2026-01-01" });
+    await c.foContract("NIFTY", "2026-11-24", { strike: 23000, optionType: "CE", from: "2026-10-01" });
+    await c.foContract("NIFTY", "2026-11-24");
+    expect(calls.map((x) => x.url)).toEqual([
+      "https://api.tejhq.dev/v1/fo/expiries/NIFTY?date=2026-10-30",
+      "https://api.tejhq.dev/v1/fo/futures/RELIANCE?from=2026-01-01",
+      "https://api.tejhq.dev/v1/fo/contract/NIFTY?expiry=2026-11-24&strike=23000&option_type=CE&from=2026-10-01",
+      "https://api.tejhq.dev/v1/fo/contract/NIFTY?expiry=2026-11-24",
+    ]);
+  });
+
+  it("foContract validates before any request", async () => {
+    const { c, calls } = client([]);
+    await expect(c.foContract("NIFTY", "2026-11-24", { strike: 23000 })).rejects.toThrow(/together/);
+    await expect(c.foContract("NIFTY", "2026-11-24", { strike: -1, optionType: "CE" })).rejects.toThrow(/positive/);
+    await expect(
+      c.foContract("NIFTY", "2026-11-24", { strike: 1, optionType: "XX" as unknown as "CE" }),
+    ).rejects.toThrow(/optionType/);
+    await expect(c.foContract("NIFTY", "soon")).rejects.toThrow();
+    expect(calls).toHaveLength(0);
+  });
+});

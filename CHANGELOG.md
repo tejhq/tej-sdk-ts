@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.0
+
+- F&O (NSE futures and options, end of day, since 2010), Retail and Pro: `foChain`, `foChainEnvelope`, `foExpiries`, `foFutures`, `foContract`.
+- `FORow`, `FOExpiry`, `FOChainMeta`, `FOContractOptions` types.
+
 ## 0.2.0
 
 - `delivery(symbol, exchange?, { from?, to? })`: NSE delivery quantity and % per day since 2010. Free key.

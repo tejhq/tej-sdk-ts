@@ -21,6 +21,10 @@ import type {
   DeliveryRow,
   DateRange,
   Envelope,
+  FOChainMeta,
+  FOContractOptions,
+  FOExpiry,
+  FORow,
   Me,
   MetricsRow,
   OHLCV,
@@ -222,6 +226,61 @@ export class Client {
   async screenerEnvelope(opts: ScreenerOptions = {}): Promise<Envelope<ScreenerRow[]> & { meta?: ScreenerMeta }> {
     const body = await this.get("/v1/screener", screenerQuery(opts));
     return isRecord(body) ? (body as unknown as Envelope<ScreenerRow[]> & { meta?: ScreenerMeta }) : { data: [] };
+  }
+
+  // ---- F&O (Retail and Pro) ------------------------------------------
+
+  /**
+   * NSE option chain for one expiry on one day. Needs a Retail or Pro key.
+   * Defaults to the latest F&O day on or before `date` and the nearest
+   * option expiry. Use `foChainEnvelope` for the resolved date, expiry and underlying.
+   */
+  async foChain(symbol: string, opts: { date?: string; expiry?: string } = {}): Promise<FORow[]> {
+    return (await this.foChainEnvelope(symbol, opts)).data;
+  }
+
+  /** `foChain` with `meta`: date, expiry and underlying actually used. */
+  async foChainEnvelope(symbol: string, opts: { date?: string; expiry?: string } = {}): Promise<Envelope<FORow[]> & { meta?: FOChainMeta }> {
+    const query: Query = {};
+    if (opts.date !== undefined) query.date = validateDate(opts.date, "date");
+    if (opts.expiry !== undefined) query.expiry = validateDate(opts.expiry, "expiry");
+    const body = await this.get(`/v1/fo/chain/${normalizeSymbol(symbol)}`, query);
+    return isRecord(body) ? (body as unknown as Envelope<FORow[]> & { meta?: FOChainMeta }) : { data: [] };
+  }
+
+  /** Expiries traded for `symbol` on a day, per instrument. Retail or Pro. */
+  async foExpiries(symbol: string, date?: string): Promise<FOExpiry[]> {
+    const query: Query = date === undefined ? {} : { date: validateDate(date, "date") };
+    const body = await this.get(`/v1/fo/expiries/${normalizeSymbol(symbol)}`, query);
+    return envelopeData<FOExpiry>(body);
+  }
+
+  /** Every futures expiry of `symbol` per day. Same range semantics as `ohlcv`. Retail or Pro. */
+  async foFutures(symbol: string, range: DateRange = {}): Promise<FORow[]> {
+    const body = await this.get(`/v1/fo/futures/${normalizeSymbol(symbol)}`, rangeQuery(range));
+    return envelopeData<FORow>(body);
+  }
+
+  /**
+   * One contract's daily history. Retail or Pro. With `strike` and
+   * `optionType` it is that option; without both, the future for `expiry`.
+   * `to` defaults to the expiry, `from` to six months before `to`.
+   */
+  async foContract(symbol: string, expiry: string, opts: FOContractOptions = {}): Promise<FORow[]> {
+    const query: Query = { expiry: validateDate(expiry, "expiry") };
+    if ((opts.strike === undefined) !== (opts.optionType === undefined)) {
+      throw new ValidationError("pass strike and optionType together, or neither for the future");
+    }
+    if (opts.strike !== undefined && opts.optionType !== undefined) {
+      if (!(opts.strike > 0)) throw new ValidationError("strike must be positive");
+      const ot = String(opts.optionType).trim().toUpperCase();
+      if (!["CE", "PE", "CA", "PA"].includes(ot)) throw new ValidationError("optionType must be CE or PE (CA, PA before 2011)");
+      query.strike = opts.strike;
+      query.option_type = ot;
+    }
+    Object.assign(query, rangeQuery(opts));
+    const body = await this.get(`/v1/fo/contract/${normalizeSymbol(symbol)}`, query);
+    return envelopeData<FORow>(body);
   }
 }
 
