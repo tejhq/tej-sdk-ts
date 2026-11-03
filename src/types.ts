@@ -202,6 +202,51 @@ export interface Me {
   keys: KeyInfo[];
 }
 
+/** One F&O contract on one day. `strike`/`option_type` are null for futures; `underlying`/`lot_size` are null before 2024-07-08. */
+export interface FORow {
+  date: string;
+  instrument: "FUTIDX" | "FUTSTK" | "OPTIDX" | "OPTSTK" | "FUTIVX";
+  expiry: string;
+  strike: number | null;
+  option_type: "CE" | "PE" | "CA" | "PA" | null;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  settle_price: number;
+  contracts: number;
+  turnover: number;
+  open_interest: number;
+  oi_change: number;
+  underlying: number | null;
+  lot_size: number | null;
+}
+
+export interface FOExpiry {
+  expiry: string;
+  instrument: string;
+  contracts: number;
+  open_interest: number;
+  strikes: number;
+}
+
+export interface FOChainMeta {
+  symbol: string;
+  /** Trading day actually used. */
+  date: string;
+  /** Expiry actually used. */
+  expiry: string;
+  count: number;
+  /** Underlying price, from 2024-07-08. */
+  underlying?: number;
+}
+
+export interface FOContractOptions extends DateRange {
+  /** With `optionType`, selects that option; without both, the future. */
+  strike?: number;
+  optionType?: "CE" | "PE" | "CA" | "PA";
+}
+
 export interface Envelope<T> {
   data: T;
   meta?: Record<string, unknown>;

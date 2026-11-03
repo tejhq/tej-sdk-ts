@@ -114,6 +114,27 @@ const { meta } = await c.screenerEnvelope({ date: "2019-03-15", universe: "liqui
 console.log(meta?.date, meta?.total); // day actually used, matches before paging
 ```
 
+## F&O (Retail and Pro)
+
+NSE futures and options, end of day, one row per contract per day since 2010.
+
+```ts
+const c = new Client({ apiKey: "tej_live_..." }); // Retail or Pro
+
+// Option chain: latest day and nearest expiry by default
+const { data: chain, meta } = await c.foChainEnvelope("NIFTY");
+console.log(meta?.date, meta?.expiry, meta?.underlying, chain.length);
+
+// Any past day and expiry
+await c.foChain("BANKNIFTY", { date: "2020-03-23", expiry: "2020-03-26" });
+
+// Expiries on a day, futures history, one contract's history
+await c.foExpiries("NIFTY", "2026-10-30");
+await c.foFutures("RELIANCE", { from: "2026-01-01" });
+await c.foContract("NIFTY", "2026-11-24", { strike: 23000, optionType: "CE", from: "2026-10-01" });
+await c.foContract("NIFTY", "2026-11-24"); // without strike: the future
+```
+
 ## API reference
 
 | Method | Endpoint | Tier | Returns |
@@ -132,6 +153,11 @@ console.log(meta?.date, meta?.total); // day actually used, matches before pagin
 | `c.resolve(q, { exchange?, limit? })` | `GET /v1/resolve` | pro | `ResolveHit[]` |
 | `c.screener({ exchange?, date?, universe?, filters?, sort?, order?, limit?, offset? })` | `GET /v1/screener` | pro | `ScreenerRow[]` |
 | `c.screenerEnvelope(...)` | same, with `meta.total` and `meta.date` | pro | `Envelope<ScreenerRow[]>` |
+| `c.foChain(symbol, { date?, expiry? })` | `GET /v1/fo/chain/{symbol}` | retail | `FORow[]` |
+| `c.foChainEnvelope(symbol, { date?, expiry? })` | same, with `meta.date`, `meta.expiry`, `meta.underlying` | retail | `Envelope<FORow[]>` |
+| `c.foExpiries(symbol, date?)` | `GET /v1/fo/expiries/{symbol}` | retail | `FOExpiry[]` |
+| `c.foFutures(symbol, { from?, to? })` | `GET /v1/fo/futures/{symbol}` | retail | `FORow[]` |
+| `c.foContract(symbol, expiry, { strike?, optionType?, from?, to? })` | `GET /v1/fo/contract/{symbol}` | retail | `FORow[]` |
 | `c.health()`, `c.ready()` | `GET /health`, `GET /ready` | keyless | `Record<string, unknown>` |
 
 Symbols are uppercased and exchanges lowercased before the request. Dates must be `YYYY-MM-DD`. Every row type is exported, so `import type { OHLCV, MetricsRow } from "tejhq"` works.
@@ -196,7 +222,9 @@ try {
 
 - **NSE bhavcopy + corp actions**: 2010-01-04 to today, ~4,100 trading days, ~7M rows
 - **BSE bhavcopy + corp actions**: 2024-07-08 to today, the SEBI CMTS cutover
-- **Cron refresh**: weekdays 20:00 IST
+- **NSE delivery %**: 2010 to today (free key)
+- **NSE F&O end of day**: 2010 to today, futures and options (Retail and Pro)
+- **Cron refresh**: weekdays 18:30 IST, 21:30 IST retry
 
 Keyless endpoints are served at the Cloudflare edge from pre-rendered JSON, so most requests return in well under a second and repeat requests are cache hits. Keyed requests bypass the edge cache and carry `X-RateLimit-Limit-Day` and `X-RateLimit-Remaining-Day` headers: 1,000 a day and 300 a minute on a free key.
 
