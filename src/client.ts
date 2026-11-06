@@ -146,7 +146,7 @@ export class Client {
     return envelopeData<AdjustedRow>(body);
   }
 
-  /** Delivery quantity and % per day, NSE only, since 2010. Needs a free key. */
+  /** Delivery quantity and % per day. NSE since 2010-01-04, BSE since 2024-07-08. Dates outside coverage return no rows. Needs a free key. */
   async delivery(symbol: string, exchange = "nse", range: DateRange = {}): Promise<DeliveryRow[]> {
     const body = await this.get(`/v1/delivery/${normalizeExchange(exchange)}/${normalizeSymbol(symbol)}`, rangeQuery(range));
     return envelopeData<DeliveryRow>(body);
