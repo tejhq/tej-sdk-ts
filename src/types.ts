@@ -247,6 +247,78 @@ export interface FOContractOptions extends DateRange {
   optionType?: "CE" | "PE" | "CA" | "PA";
 }
 
+export interface FOStatsRow {
+  date: string;
+  /** "index" or "stock". */
+  kind: string;
+  expiry: string;
+  is_nearest: boolean;
+  ce_oi: number | null;
+  pe_oi: number | null;
+  ce_oi_change: number | null;
+  pe_oi_change: number | null;
+  ce_contracts: number | null;
+  pe_contracts: number | null;
+  pcr_oi: number | null;
+  pcr_volume: number | null;
+  max_pain: number | null;
+  strikes: number | null;
+  fut_settle: number | null;
+  fut_settle_change: number | null;
+  fut_oi: number | null;
+  fut_oi_change: number | null;
+  fut_contracts: number | null;
+  /** long_buildup, short_buildup, short_covering or long_unwinding. */
+  buildup: string | null;
+  underlying: number | null;
+  basis: number | null;
+  rollover_pct: number | null;
+}
+
+export interface FOStatsOptions extends DateRange {
+  /** Only this expiry. */
+  expiry?: string;
+}
+
+export type UnusualSignal = "volume" | "move" | "gap" | "delivery" | "fut_oi" | "high_52w" | "low_52w";
+
+export interface UnusualRow {
+  date: string;
+  symbol: string;
+  isin: string | null;
+  signal: UnusualSignal;
+  /** What happened: return, gap, volume multiple, delivery %, OI change % or close. */
+  value: number | null;
+  /** What is usual for this stock. */
+  normal: number | null;
+  /** Distance from normal in standard deviations. */
+  z: number | null;
+  close: number | null;
+  ret_1d: number | null;
+  volume_ratio: number | null;
+  turnover: number | null;
+}
+
+export interface UnusualOptions {
+  /** Trading day; defaults to the latest. */
+  date?: string;
+  signal?: UnusualSignal;
+  exchange?: "nse" | "NSE";
+}
+
+export interface UnusualHistoryOptions extends DateRange {
+  signal?: UnusualSignal;
+  exchange?: "nse" | "NSE";
+}
+
+export interface UnusualMeta {
+  exchange: string;
+  /** Trading day actually used. */
+  date?: string;
+  count: number;
+  signal?: string;
+}
+
 export interface Envelope<T> {
   data: T;
   meta?: Record<string, unknown>;

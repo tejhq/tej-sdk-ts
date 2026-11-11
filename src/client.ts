@@ -25,6 +25,8 @@ import type {
   FOContractOptions,
   FOExpiry,
   FORow,
+  FOStatsOptions,
+  FOStatsRow,
   Me,
   MetricsRow,
   OHLCV,
@@ -36,6 +38,10 @@ import type {
   SymbolInterval,
   UniverseMember,
   UniverseName,
+  UnusualHistoryOptions,
+  UnusualMeta,
+  UnusualOptions,
+  UnusualRow,
 } from "./types.js";
 
 export interface ClientOptions {
@@ -282,6 +288,58 @@ export class Client {
     const body = await this.get(`/v1/fo/contract/${normalizeSymbol(symbol)}`, query);
     return envelopeData<FORow>(body);
   }
+
+  /** Daily F&O stats per expiry: PCR, max pain, buildup, basis, rollover. Same range semantics as `ohlcv`. Retail or Pro. */
+  async foStats(symbol: string, opts: FOStatsOptions = {}): Promise<FOStatsRow[]> {
+    const query = rangeQuery(opts);
+    if (opts.expiry !== undefined) query.expiry = validateDate(opts.expiry, "expiry");
+    const body = await this.get(`/v1/fo/stats/${normalizeSymbol(symbol)}`, query);
+    return envelopeData<FOStatsRow>(body);
+  }
+
+  // ---- unusual activity (Retail and Pro) -----------------------------
+
+  /**
+   * NSE stocks far outside their own normal on one day, strongest first.
+   * Defaults to the latest day. Use `unusualEnvelope` for the resolved date.
+   */
+  async unusual(opts: UnusualOptions = {}): Promise<UnusualRow[]> {
+    return (await this.unusualEnvelope(opts)).data;
+  }
+
+  /** `unusual` with `meta`: date actually used and count. */
+  async unusualEnvelope(opts: UnusualOptions = {}): Promise<Envelope<UnusualRow[]> & { meta?: UnusualMeta }> {
+    const ex = unusualExchange(opts.exchange);
+    const query: Query = {};
+    if (opts.date !== undefined) query.date = validateDate(opts.date, "date");
+    unusualSignal(opts.signal, query);
+    const body = await this.get(`/v1/unusual/${ex}`, query);
+    return isRecord(body) ? (body as unknown as Envelope<UnusualRow[]> & { meta?: UnusualMeta }) : { data: [] };
+  }
+
+  /** One stock's unusual days over a range, back to 2010. Retail or Pro. */
+  async unusualHistory(symbol: string, opts: UnusualHistoryOptions = {}): Promise<UnusualRow[]> {
+    const ex = unusualExchange(opts.exchange);
+    const query = rangeQuery(opts);
+    unusualSignal(opts.signal, query);
+    const body = await this.get(`/v1/unusual/${ex}/${normalizeSymbol(symbol)}`, query);
+    return envelopeData<UnusualRow>(body);
+  }
+}
+
+const UNUSUAL_SIGNALS = ["volume", "move", "gap", "delivery", "fut_oi", "high_52w", "low_52w"];
+
+function unusualExchange(exchange: string | undefined): string {
+  const ex = (exchange ?? "nse").trim().toLowerCase();
+  if (ex !== "nse") throw new ValidationError("unusual activity is NSE only");
+  return ex;
+}
+
+function unusualSignal(signal: string | undefined, query: Query): void {
+  if (signal === undefined) return;
+  const s = String(signal).trim().toLowerCase();
+  if (!UNUSUAL_SIGNALS.includes(s)) throw new ValidationError(`signal must be one of ${UNUSUAL_SIGNALS.join(", ")}`);
+  query.signal = s;
 }
 
 const SCREENER_COLUMNS = new Set([

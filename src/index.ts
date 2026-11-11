@@ -21,6 +21,8 @@ export type {
   FOContractOptions,
   FOExpiry,
   FORow,
+  FOStatsOptions,
+  FOStatsRow,
   Exchange,
   KeyInfo,
   MatchedOn,
@@ -37,5 +39,10 @@ export type {
   SymbolInterval,
   UniverseMember,
   UniverseName,
+  UnusualHistoryOptions,
+  UnusualMeta,
+  UnusualOptions,
+  UnusualRow,
+  UnusualSignal,
 } from "./types.js";
 export { VERSION } from "./version.js";
