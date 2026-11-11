@@ -220,6 +220,15 @@ export interface FORow {
   oi_change: number;
   underlying: number | null;
   lot_size: number | null;
+  /** Options that traded that day only. Black-76 on the same-expiry forward; annualised (0.14 = 14%). */
+  iv: number | null;
+  /** With respect to the forward. */
+  delta: number | null;
+  gamma: number | null;
+  /** Price change per calendar day. */
+  theta: number | null;
+  /** Price change per volatility point. */
+  vega: number | null;
 }
 
 export interface FOExpiry {
@@ -273,6 +282,10 @@ export interface FOStatsRow {
   underlying: number | null;
   basis: number | null;
   rollover_pct: number | null;
+  /** IV at the strike nearest the forward (0.14 = 14%). */
+  atm_iv: number | null;
+  /** IV of the ~25-delta put minus the ~25-delta call. */
+  iv_skew: number | null;
 }
 
 export interface FOStatsOptions extends DateRange {

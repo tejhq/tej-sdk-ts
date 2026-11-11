@@ -2,6 +2,8 @@
 
 ## 0.4.0
 
+- `FORow` gains `iv`, `delta`, `gamma`, `theta`, `vega` (options that traded that day), returned by `foChain` and `foContract`.
+- `FOStatsRow` gains `atm_iv` and `iv_skew`.
 - `foStats(symbol, { from?, to?, expiry? })`: daily F&O figures per expiry (put-call ratio by OI and volume, max pain, futures buildup, basis, rollover %) since 2010. Retail and Pro.
 - Unusual activity, NSE, Retail and Pro: `unusual({ date?, signal? })` and `unusualEnvelope` for one day, strongest first, and `unusualHistory(symbol, { from?, to?, signal? })` for one stock since 2010.
 - `FOStatsRow`, `FOStatsOptions`, `UnusualRow`, `UnusualSignal`, `UnusualOptions`, `UnusualHistoryOptions`, `UnusualMeta` types.
