@@ -134,7 +134,7 @@ await c.foFutures("RELIANCE", { from: "2026-01-01" });
 await c.foContract("NIFTY", "2026-11-24", { strike: 23000, optionType: "CE", from: "2026-10-01" });
 await c.foContract("NIFTY", "2026-11-24"); // without strike: the future
 
-// Daily stats per expiry: pcr_oi, pcr_volume, max_pain, buildup, basis, rollover_pct
+// Daily stats per expiry: pcr_oi, pcr_volume, max_pain, buildup, basis, rollover_pct, atm_iv, iv_skew
 await c.foStats("NIFTY", { from: "2026-11-01" });
 await c.foStats("RELIANCE", { from: "2026-01-01", expiry: "2026-11-24" });
 ```
