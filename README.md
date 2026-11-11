@@ -133,6 +133,23 @@ await c.foExpiries("NIFTY", "2026-10-30");
 await c.foFutures("RELIANCE", { from: "2026-01-01" });
 await c.foContract("NIFTY", "2026-11-24", { strike: 23000, optionType: "CE", from: "2026-10-01" });
 await c.foContract("NIFTY", "2026-11-24"); // without strike: the future
+
+// Daily stats per expiry: pcr_oi, pcr_volume, max_pain, buildup, basis, rollover_pct
+await c.foStats("NIFTY", { from: "2026-11-01" });
+await c.foStats("RELIANCE", { from: "2026-01-01", expiry: "2026-11-24" });
+```
+
+## Unusual activity (Retail and Pro)
+
+NSE stocks far outside their own previous 60 sessions on a day: volume, move, gap, delivery, fut_oi, high_52w, low_52w. Facts about the day, not forecasts.
+
+```ts
+const { data, meta } = await c.unusualEnvelope(); // latest day, strongest first
+console.log(meta?.date, meta?.count);
+for (const r of data.slice(0, 10)) console.log(r.symbol, r.signal, r.value, r.normal, r.z);
+
+await c.unusual({ date: "2026-11-09", signal: "fut_oi" });
+await c.unusualHistory("DIVISLAB", { from: "2015-01-01" }); // one stock's unusual days
 ```
 
 ## API reference
@@ -158,6 +175,10 @@ await c.foContract("NIFTY", "2026-11-24"); // without strike: the future
 | `c.foExpiries(symbol, date?)` | `GET /v1/fo/expiries/{symbol}` | retail | `FOExpiry[]` |
 | `c.foFutures(symbol, { from?, to? })` | `GET /v1/fo/futures/{symbol}` | retail | `FORow[]` |
 | `c.foContract(symbol, expiry, { strike?, optionType?, from?, to? })` | `GET /v1/fo/contract/{symbol}` | retail | `FORow[]` |
+| `c.foStats(symbol, { from?, to?, expiry? })` | `GET /v1/fo/stats/{symbol}` | retail | `FOStatsRow[]` |
+| `c.unusual({ date?, signal? })` | `GET /v1/unusual/nse` | retail | `UnusualRow[]` |
+| `c.unusualEnvelope({ date?, signal? })` | same, with `meta.date` and `meta.count` | retail | `Envelope<UnusualRow[]>` |
+| `c.unusualHistory(symbol, { from?, to?, signal? })` | `GET /v1/unusual/nse/{symbol}` | retail | `UnusualRow[]` |
 | `c.health()`, `c.ready()` | `GET /health`, `GET /ready` | keyless | `Record<string, unknown>` |
 
 Symbols are uppercased and exchanges lowercased before the request. Dates must be `YYYY-MM-DD`. Every row type is exported, so `import type { OHLCV, MetricsRow } from "tejhq"` works.

@@ -230,3 +230,37 @@ describe("F&O", () => {
     expect(calls).toHaveLength(0);
   });
 });
+
+describe("F&O stats and unusual", () => {
+  it("foStats url", async () => {
+    const { c, calls } = client([{ body: { data: [{ pcr_oi: 1.1 }] } }, { body: { data: [] } }]);
+    expect((await c.foStats("nifty", { from: "2026-11-01", expiry: "2026-11-24" }))[0]?.pcr_oi).toBe(1.1);
+    await c.foStats("NIFTY");
+    expect(calls.map((x) => x.url)).toEqual([
+      "https://api.tejhq.dev/v1/fo/stats/NIFTY?from=2026-11-01&expiry=2026-11-24",
+      "https://api.tejhq.dev/v1/fo/stats/NIFTY",
+    ]);
+  });
+
+  it("unusual day, envelope and history", async () => {
+    const meta = { exchange: "nse", date: "2026-11-09", count: 1 };
+    const row = { symbol: "DIVISLAB", signal: "move", z: 7.45 };
+    const { c, calls } = client(Array.from({ length: 3 }, () => ({ body: { data: [row], meta } })));
+    expect((await c.unusual())[0]?.symbol).toBe("DIVISLAB");
+    expect((await c.unusualEnvelope({ date: "2026-11-09", signal: "fut_oi" })).meta?.date).toBe("2026-11-09");
+    expect((await c.unusualHistory("divislab", { from: "2015-01-01", signal: "move" }))[0]?.z).toBe(7.45);
+    expect(calls.map((x) => x.url)).toEqual([
+      "https://api.tejhq.dev/v1/unusual/nse",
+      "https://api.tejhq.dev/v1/unusual/nse?date=2026-11-09&signal=fut_oi",
+      "https://api.tejhq.dev/v1/unusual/nse/DIVISLAB?from=2015-01-01&signal=move",
+    ]);
+  });
+
+  it("unusual validates before any request", async () => {
+    const { c, calls } = client([]);
+    await expect(c.unusual({ signal: "momentum" as unknown as "move" })).rejects.toThrow(/signal/);
+    await expect(c.unusual({ exchange: "bse" as unknown as "nse" })).rejects.toThrow(/NSE only/);
+    await expect(c.unusual({ date: "today" })).rejects.toThrow();
+    expect(calls).toHaveLength(0);
+  });
+});

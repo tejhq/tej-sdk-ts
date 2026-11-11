@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.4.0
+
+- `foStats(symbol, { from?, to?, expiry? })`: daily F&O figures per expiry (put-call ratio by OI and volume, max pain, futures buildup, basis, rollover %) since 2010. Retail and Pro.
+- Unusual activity, NSE, Retail and Pro: `unusual({ date?, signal? })` and `unusualEnvelope` for one day, strongest first, and `unusualHistory(symbol, { from?, to?, signal? })` for one stock since 2010.
+- `FOStatsRow`, `FOStatsOptions`, `UnusualRow`, `UnusualSignal`, `UnusualOptions`, `UnusualHistoryOptions`, `UnusualMeta` types.
+
 ## 0.3.0
 
 - F&O (NSE futures and options, end of day, since 2010), Retail and Pro: `foChain`, `foChainEnvelope`, `foExpiries`, `foFutures`, `foContract`.
