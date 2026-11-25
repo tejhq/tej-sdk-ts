@@ -56,7 +56,7 @@ const symbols = ["RELIANCE", "TCS", "INFY", "HDFCBANK", "ICICIBANK"];
 const results = await Promise.all(symbols.map((s) => c.ohlcv(s, "nse")));
 ```
 
-Keyless traffic is limited to 100 requests per 10 seconds per IP at the edge. The SDK retries 429s with backoff, but for more than a handful of symbols the Pro `batch` endpoint is one request instead of fifty.
+OHLCV, snapshot, actions and status are limited to 5 requests per 10 seconds per IP, with or without a key. Without a key, the first three also share 500 calls a day per IP. The SDK retries 429s with backoff, but for more than a handful of symbols the Pro `batch` endpoint is one request instead of fifty.
 
 ## Free key endpoints
 
